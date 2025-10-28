@@ -1,23 +1,22 @@
 # Containerorkestrering med Kubernetes
 
-Undervisningen sker på tisdagar mellan 18-20 (undantag under jul/nyår) mellan 28:e oktober till 10:e februari. Länk skall finnas i Teams kalendern.
+Handledningar sker på tisdagar mellan 18-20 (undantag under jul/nyår) mellan 28:e oktober till 10:e februari. Länk skall finnas i Teams kalendern.
 
-- Handledaren är Jonas Björk.
-- Info kommer att finnas primärt på https://lernia.itslearning.com/.
-- Sker i individuell takt dock finns handledningstillfällen varje vecka, se nedan.
-- Denna korta kurs är ett utdrag från *DevOps Engineer* hos Lernia
+**Inga föreläsningar eller lektioner, utan allt lärande sker i egen takt och tid**  
+Detta ger möjlighen att plöja igenom allt senare istället för att göra vecka för vecka.
+
+- Handledare är Jonas Björk.
+- Information kommer att finnas primärt på https://lernia.itslearning.com/.
+- Denna korta kurs är ett utdrag från *DevOps Engineer* hos Lernia.
 
 Två olika spår/källor av information för varje vecka
 
 - Inspelade lektioner från handledaren.
 - Från RedHat kursen: Red Hat OpenShift Administration I: Operating a Production Cluster (DO180).
 
-Möjlighet att plöja igenom allt senare istället för att göra vecka för vecka.
-
-
 ---  
 
-### Schema handläggning
+## Schema handläggning
 
 - **Tisdag 2025okt28 18-20, v44 (utb v01)**  
 Genomgång av utbildningen.  
