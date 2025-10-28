@@ -21,7 +21,8 @@ Möjlighet att plöja igenom allt senare istället för att göra vecka för vec
 
 - **Tisdag 2025okt28 18-20, v44 (utb v01)**  
 Genomgång av utbildningen.  
-Ingen uppgift att göra denna vecka.
+Ingen uppgift att göra denna vecka.  
+https://www.youtube.com/watch?v=jCXwk3Dk_8U
 
 - **Tisdag 2025nov04 18-20, v45 (utb v02)**  
 
