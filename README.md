@@ -57,6 +57,8 @@ https://www.youtube.com/watch?v=aGUyEwgXB7w
 
 - **Tisdag 2026feb10 18-20, v07 (utb v16)**  
 
+
+
 **Done**  
 Kursen kan slutföras i egen takt utan handledning till 31:e maj.
 
