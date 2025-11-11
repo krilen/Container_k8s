@@ -24,12 +24,14 @@ Ingen uppgift att göra denna vecka.
 https://www.youtube.com/watch?v=jCXwk3Dk_8U
 
 - **Tisdag 2025nov04 18-20, v45 (utb v02)**  
-Genomgång av läroportalen (itslearning)  
-RedHat Academy  
-VM podman hos Lernia  
+Genomgång av läroportalen (itslearning).  
+RedHat Academy.  
+VM podman hos Lernia.  
 https://www.youtube.com/watch?v=aGUyEwgXB7w
 
 - **Tisdag 2025nov11 18-20, v46 (utb v03)**  
+Handledning med frågor, hade inga.  
+Ingen inspelning.  
 
 - **Tisdag 2025nov18 18-20, v47 (utb v04)**  
 
