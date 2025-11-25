@@ -27,6 +27,7 @@ https://www.youtube.com/watch?v=jCXwk3Dk_8U
 Genomgång av läroportalen (itslearning).  
 RedHat Academy.  
 VM podman hos Lernia.  
+Modul 1: Introduktion, Podman och container images  
 https://www.youtube.com/watch?v=aGUyEwgXB7w
 
 - **Tisdag 2025nov11 18-20, v46 (utb v03)**  
@@ -34,10 +35,15 @@ Handledning med frågor, hade inga.
 Ingen inspelning.  
 
 - **Tisdag 2025nov18 18-20, v47 (utb v04)**  
+Handledning  
+Modul 2: Lagring, felsökning och Compose  
+Ingen inspelning
 
 - **Tisdag 2025nov25 18-20, v48 (utb v05)**  
+Inställt pga sjukdom
 
 - **Tisdag 2025dec02 18-20, v49 (utb v06)**  
+
 
 - **Tisdag 2025dec09 18-20, v50 (utb v07)**  
 
