@@ -102,21 +102,7 @@ from the application's web API container.
 
 ---
 
-## CONTAINER NETWORKS
 
-If you have several container instances running you can isolate them as needed so they only have access to
-only the containers that they need.
-
-Example
-
-- Database container: BO network
-- API container: BO and FO network
-- Webserver container: FO network
-
-You can now create different networks. Create the BO network and place both the database and API container
-in that network. Then create the FO network and place both the API and webserver container in that network.
-Now the webserver can reach the API container and the API container can reach the databse container. The
-webserver container con NOT reach the databse container.
 
 
 

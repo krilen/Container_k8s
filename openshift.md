@@ -42,7 +42,8 @@ The following figure illustrates the basic lifecycle of an application that is d
 1. Pods are assigned to a healthy node.
 1. Pods run until their containers exit.
 1. Pods and their containers are removed from the node.  
-	Depending on policy and exit code, RHOCP might remove pods after exiting, or might retain them to enable access to the pod container logs.
+	Depending on policy and exit code, RHOCP might remove pods after exiting, or might retain them to 
+	enable access to the pod container logs.
 
 
 
