@@ -76,14 +76,14 @@ in each technology
 
 By containerize provides advantages for the development process such as easy testing and deploying.
 
-### TESTING AND WORKFLOW
+### Testing and workflow
 
 An advantage is the ability to scale, a developer can write software and test it locally the deploy it to
 with few or no change. This workflow is useful when writing microservices that are small and short lived
 that are designed to run spin up and down only when needed. Developers that use containers can take advantage
 of Continuous Integration/Continuous Development (CI/CD) pipelines to deploy containers to various environments.
 
-### STABILITY
+### Stability
 
 By having a container that isolates a applications dependent libraries and the different version a developer
 can easy deploy a newer version of the appliaction that has been updated without having to update the host
@@ -92,7 +92,7 @@ system. It is all contained inside the container and will not cause a dependecy 
 For example, a container with a specific version of Python ensures that the same version of Python is
 used in every testing or deployment environment.
  
-### MULTI-CONTAINER APPLICATIONS
+### Multi-Container applications
 
 This application is distributed over severla containers. You can run the containers from the same image for
 high availability (HA) replicas, or from several different images.
@@ -100,7 +100,23 @@ high availability (HA) replicas, or from several different images.
 For example, a developer can create an application that includes a database container that runs separately
 from the application's web API container. 
 
+---
 
+## CONTAINER NETWORKS
+
+If you have several container instances running you can isolate them as needed so they only have access to
+only the containers that they need.
+
+Example
+
+- Database container: BO network
+- API container: BO and FO network
+- Webserver container: FO network
+
+You can now create different networks. Create the BO network and place both the database and API container
+in that network. Then create the FO network and place both the API and webserver container in that network.
+Now the webserver can reach the API container and the API container can reach the databse container. The
+webserver container con NOT reach the databse container.
 
 
 
