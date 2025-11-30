@@ -102,7 +102,15 @@ from the application's web API container.
 
 ---
 
+## CONTAINER LAYERS
 
+A container image are immutable and layered. Each layer consists of file system differences (diffs). A diff
+contains the changes from the previous layer (adding, removing orch modifying file/s).
+
+When a container is started the writable layer is added called *container layer*, this layer that can be read
+and written is used for runtime file operations such as wotking files, temp filers and log files. When the
+container is deleted this layer is deleted. Meaning that this layer is not suitable for storage, to keep
+data beyonf a container lifetime (database, ...) a persistant container storage is needed.
 
 
 
