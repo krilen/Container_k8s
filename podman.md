@@ -69,12 +69,6 @@ exists for the same thing.
 
 - *'podman -v'*: Which version of podman you run using the 
 
-- *'podman pull ...*': Pull a container from a registry to your local machine
-
-	- ex: *'podman pull registry.redhat.io/rhel7/rhel:7.9'*:  
-	Pulls from "registry.redhat.io/rehel7" the container named "rhel" with the version (tag) "7.9".  
-	It **ONLY** downloads the container image not runs it.
-	
 - *'podman images'*: See which container images are stored locally on the machine
 
 
@@ -82,7 +76,7 @@ exists for the same thing.
 
 ---
 
-## MANAGE CONTAINERS
+## MANAGE CONTAINERS COMMANDS
 
 Basic operations that can be used to manage containers. 
 
@@ -121,6 +115,8 @@ Basic operations that can be used to manage containers.
 
 - Starting a container,  'podman run ...'  
 	Will start a container instance of a container image  
+	If the images does not exits locally it will search container registries and if it finds the container 
+	image it will pull it down then start the container instance.
 
 		'podman run registry.redhat.io/rhel7/rhel:7.9'  
 		Will start the container instance in attached mode and you will see the output on the screen
@@ -133,6 +129,9 @@ Basic operations that can be used to manage containers.
 	
 		'podman run --name db ...'  
 		The container instance will have the name "db" to maked is simplear to identify it.
+		
+		'podman run --net fo ...' or 'podman run --network fo ...'  
+		Attach the container instance to a specific network named "fo".
 	
 		'podman run -p 8080:80 ...'  
 		To access a container you must expose them.  
@@ -211,6 +210,63 @@ Basic operations that can be used to manage containers.
 		
 		'podman rm web --force'
 		Forcing the removal of the container even if it is running
+
+---
+
+## MANAGE CONTAINER IMAGES COMMANDS
+
+- Pull container images, *'podman pull ...*'  
+	Pull a container image from a registry to your local machine.  
+	
+		'podman pull registry.redhat.io/rhel7/rhel:7.9'  
+		Pulls from "registry.redhat.io/rehel7" the container named "rhel" with the tag (version) "7.9".  
+		It **ONLY** downloads the container image not runs it.
+	
+	To pull an image you normally need  
+	- Registry URL  
+	You can skip the URL to the registry and in Podman you can specify which repositories you want to
+	search in
+		- User defined registries are placed in  
+		~/.config/containers/registries.conf or /etc/containers/registries.conf
+		
+		- Global file  
+		/etc/containers/registries.conf
+		
+		OBS!!! In Windows the file exists but in another location look for "registries.conf".  
+		
+		The user-defined file overrides the Global file, if it exists.  
+		The order of which registries are in is also the order of which they are searched.  
+		It is also possible to block a registry if needed.  
+		
+		When pulling an image in Podman and it matches the result in several registries you will be 
+		prompted to select.
+	
+	- User or organization
+	
+	- Image repository (image name)  
+	Sometimes the user/organization and image repository (image name) are the same.  
+	
+	- Image tag (version)  
+	If you do not specify a tag you automatically use the tag "latest"  
+
+
+
+### Manage registry credentials with Podman
+
+Some registries require you to authenticate before you are able to anything or something specific.  
+Normally you get something like *"... unable to retrieve auth token: invalid username/password: unauthorized ..."*
+
+To login you use 'podman login ...' command. 
+
+	'podman login registry.redhat.io'  
+	After you connect with the registry you are promptet for a username and password.  
+	The results are notified at once.
+
+After you are logged in the credentials are stored in auth.json file in a special location.
+
+	${XDG_RUNTIME_DIR}/containers/auth.json file,  
+	the ${XDG_RUNTIME_DIR} refers to a specific directory.  
+	The credentials are encoded in base64 format.
 
 ---
 

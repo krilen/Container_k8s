@@ -110,7 +110,66 @@ contains the changes from the previous layer (adding, removing orch modifying fi
 When a container is started the writable layer is added called *container layer*, this layer that can be read
 and written is used for runtime file operations such as wotking files, temp filers and log files. When the
 container is deleted this layer is deleted. Meaning that this layer is not suitable for storage, to keep
-data beyonf a container lifetime (database, ...) a persistant container storage is needed.
+data beyond a container lifetime (database, ...) a persistant container storage is needed.
+
+---
+
+## CONTAINER REGISTRY
+
+A container image is a packed version of your application with all of its dependecies to be able to run.
+A container registry (or simply registry) is used to store container images and to share them if needed,
+example of regististires are Quay.io, Red Hat Registry, Docker Hub,  
+
+It is from an external registry that you pull container images to your local storage.
+
+### Red Hat Registry
+
+Redhat distributes containers using two registries
+
+- registry.access.redhat.com: requires no authentication
+- registry.redhat.io: requires authentication
+
+But Red Hat has a centrilized serach utility for both registries called "The Red Hat Ecosystem Catalog".
+With it you can search for images and get detailed information about an container images.
+
+	https://catalog.redhat.com/software/containers/explore 
+
+With it you get detailed information about an container imae
+
+### Quay.io
+
+Quay.io can be used to store your own custom container images. Login can be done using a RedHat developer
+account.
+
+---
+
+## Manage Registries with skopeo
+
+Skopeo is a CLI for working withe container images.  
+You can use it in several ways
+
+Skopeo can inspect remote images or transfer images between registries without using local storage. 
+The skopeo command uses the transport:image format, such as *docker://remote_image*, *dir:path*, or 
+*oci:path:tag*.
+
+- Inspect remote container images.  
+
+		'skopeo inspect docker.io/krilen/hello:v2'
+		You get information (metadata) about the remote container image
+
+- Copy a container image between registries.  
+	
+		'skopeo copy docker://registry.access.redhat.com/ubi9/nodejs-18 docker://quay.io/myuser/nodejs-18'
+		Use the skopeo copy command to copy images between registries. The following example copies the 
+		registry.access.redhat.com/ubi9/nodejs-18:latest image into the quay.io/myuser/nodejs-18 Quay.io repository.
+
+		'skopeo copy docker://registry.access.redhat.com/ubi9/nodejs-18 dir:/var/lib/images/nodejs-18'
+		The following example changes the transport format to download an image into a local director
+
+- Sign an image with OpenPGP keys.
+- Convert image format, for example from Docker to the OCI format.
+
+
 
 
 
