@@ -119,24 +119,98 @@ Basic operations that can be used to manage containers.
 		'podman inspect --format="{{.State.StartedAt}}" web' -> "2025-11-30 17:49:08.001890395 +0100 CET"  
 		Get when the container was started
 
-!!!! STOPPING CONTAINERS!!!
+- Starting a container,  'podman run ...'  
+	Will start a container instance of a container image  
+
+		'podman run registry.redhat.io/rhel7/rhel:7.9'  
+		Will start the container instance in attached mode and you will see the output on the screen
+
+		'podman run -d ...'  
+		Will start the container instance in deattached mode and it will run in the background
+
+		'podman run --rm ...'
+		Will automatically remove the container instance when the conatiner is stopped
+	
+		'podman run --name db ...'  
+		The container instance will have the name "db" to maked is simplear to identify it.
+	
+		'podman run -p 8080:80 ...'  
+		To access a container you must expose them.  
+		With the *'-p'* parameter you expose the incoming port to the containers port. In the above example
+	 	port 8080 are exposed in podman and it will connect to post 80 on the specified container.
 
 
-- *'podman run ...'*: Will start a container instance of a container image  
+- Stopping container gracefully, *'podman stop ...'*  
+	When stopping a container Podman sends a SIGTERM signal to the container to start the cleanup procedure
+	before. If the container does not reply to the SIGTERM signal Podman sends a SIGKILL signal to the 
+	container to forcefully stop the container by defualt Podmans waits 10 seconds before sending the 
+	SIGKILL signal but it can be changed
+	
+		'podman stop web'  
+		Stop the container named "web"
+		
+		'podman stop 1b982aeb75dd'  
+		Stop the container with the specified ID
+		
+		'podman stop --all'  
+		Stops all running containers
+		
+		'podman stop --time=100 web'
+		Change the default defualt gracetime of 10s before sending the SIGKILL signal, but if the 
+		container responses as normal it stops as normal, does not wait
 
-	- ex: *'podman run registry.redhat.io/rhel7/rhel:7.9'*  
-	Will start the container instance in attached mode and you will see the output on the screen
-	- ex: *'podman run -d ...'*  
-	Will start the container instance in deattached mode and it will run in the background
-	- ex: *'podman run --rm ...'*  
-	Will automatically remove the container instance when the conatiner is stopped
-	- ex: *'podman run --name db ...'*  
-	The container instance will have the name "db" to maked is simplear to identify it.
-	- ex: *'podman run -p 8080:80 ...'*  
-	To access a container you must expose them.  
-	With the *'-p'* parameter you expose the incoming port to the containers port. In the above example
-	 port 8080 are exposed in podman and it will connect to post 80 on the specified container.
+	A container that is stops enters an exited state and is not removed unless the flag "--rm" is added
+	to the run command. You can see all stopped container with 'podman ps --all'.
+	
+	A stopped container can be started.
+	
+	But a container can also be stopped and end up in an exited state becase of other reasons like OOM
+	state, some error state or it have finished its work.
 
+- Stopping container forcefully, *'podman kill ...'*  
+	Just like stopping a container but you send a SIGKILL signal to the container and the container gets
+	stopped forcefullt.
+	
+		'podman kill web'
+		Kills the container direct with a SIGKILL signal instead of a SIGTERM signal.
+
+- Pausing containers, *'podman pause ...'*  
+	Both 'podman kill ..' and 'podman kill ...' could eventually send the SIGKILL signal but the 
+	'podman pause ...' command suspends att processes in the container with the SIGSTOP signal.
+	A container that has beend paused can be unpaused.
+	
+		'podman pause web'  
+		Pause the container named "web"
+		
+		'podman ps --all'  
+		To be able to see container that is in the pause state
+		
+		'podman unpause web"
+		Unpause the container named "web" ans resume it as running.
+
+
+- Restart container, *'podman restart ...'*  
+	Restarts a running container it can also start a stopped container.
+	
+		'podman restart web'
+		Restarts a running container named "web"
+
+- Remove container, *'podman rm ...'*  
+	A container that has been stopped can be removed unless the flag "--rm" was used when starting 
+	the container. A running container can not be removed it must be stopped unless you use the force
+	flag "--force", the contarin is stopped forcefully then removed.
+	
+		'podman rm web'  
+		Remove the stopped the container named "web"
+		
+		'podman rm 1b982aeb75dd'  
+		Remove the stopped the container with the specified ID
+		
+		'podman rm --all'  
+		Removing all stopped containers
+		
+		'podman rm web --force'
+		Forcing the removal of the container even if it is running
 
 ---
 
@@ -400,23 +474,76 @@ a container to the host system and from the host system to a container.
 	
 	'podman cp config web:/app/'  
 	Copy the local file "config" to "/app/" fodler in the container "web"
+
+---
+
+## QUADLETS
+
+Quadlets bridge the integration between systemd and containers by creating a configuration to manage a 
+container as a system application.
+
+Systemd is a system and service management tool for Linux operating systems. Systemd uses service unit
+files to start and stop applications, or to enable them to start at boot time. Typically, an administrator
+manages these applications with the systemctl command.
+
+### Quadlet unit file
+
+A Quadlet Unit file is a systemd unit file but with a custon container section to specify the containers
+properties.
+
+	Quadlet unit file
+	-----
+	[Unit]
+	Description=One time container that outputs the contents of the OS release file
 	
-	
+	[Container]
+	Image=registry.access.redhat.com/ubi8/httpd-24:latest
+	Volume=/www:/var/www/html:ro
+	Entrypoint=/usr/bin/cat
+	Exec=/etc/os-release
+
+	[Install]
+	WantedBy=multi-user.target
+
+The container section tells in the Quadlet unit file  
+
+1. Tells which image to use (httpd-24:latest)
+
+1. Maps a storage volume (/www -> /var/www/html)
+
+1. Tells the entrypoint (/usr/bin/cat)
+
+1. Adds additional parameters for the entrypoint (/etc/os-release)
 
 
+The Quadlet unit files use the <serviceName>.container naming pattern and can be stored in the following
+paths:
 
+| Rootful                        | Rootless                             |
+| ---                            | ---                                  |
+| /run/containers/systemd/       | $XDG_RUNTIME_DIR/containers/systemd/ |
+| /etc/containers/systemd/       | $XDG_CONFIG_HOME/containers/systemd/ |
+| /usr/share/containers/systemd/ | /etc/containers/systemd/users/$(UID) |
+|                                | /etc/containers/systemd/users/       |
 
+After adding or modifying unit files, you must use the systemctl command to reload the systemd 
+configuration.
 
+	'systemctl --user daemon-reload'
 
+### Managing the Quadlet Service
 
+To manage a Quadlet service, use the systemctl command.
 
+	systemctl --user [start, stop, status, enable, disable] container-web.service
 
+When you use the --user option, by default, systemd starts the service at your login, and stops it at your
+logout. You can start your enabled services at the operating system boot, and stop them on shutdown, by
+running the loginctl enable-linger command.
 
+	loginctl enable-linger
 
-
-
-
-
+To revert the operation, use the loginctl disable-linger command.
 
 
 
