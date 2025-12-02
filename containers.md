@@ -169,6 +169,165 @@ The skopeo command uses the transport:image format, such as *docker://remote_ima
 - Sign an image with OpenPGP keys.
 - Convert image format, for example from Docker to the OCI format.
 
+---
+
+## CREATING CUSTOM CONTAINER IMAGES
+
+It is possible to create you own container image. To do that you need to create a "Containerfile" and
+in it supply the necessary instructions to build a container image.
+
+Each line in the Containerfile adds another layer to the container image, each layer is stacked on to 
+of each other.
+
+**OBS!!!** In Docker they use "Dockerfiles" instead of "Containerfile" they are basically the same but 
+"Containerfile" does not associate with any specific container runtime engine.
+
+Each instructions adds some change on top on a container base image. The base image is the minimal needed
+to run the application often consisting of  
+
+- Package manager
+- Init system
+- File system layout
+- Preinstalled dependencies and runtime for the type of base image (php, python, mysql, ...)
+
+
+### Red Hat UBI
+
+For Red Hat container images uses their UBI (universal base image) that comes in different variants, 
+see below). Other UBI images provided by Red Hat other runtimes such as Ptyhon and Node.js.
+ 
+Variants of UBI images
+
+- standard  
+	This is the primary UBI, which includes DNF, systemd, and utilities such as gzip and tar.
+
+- init  
+	Simplifies running multiple applications within a single container by managing them with systemd.
+
+- minimal  
+	Thiss image is smaller than the init image and still provides nice-to-have features. This image uses 
+	the microdnf minimal package manager instead of the full-sized version of DNF.
+
+- micro
+	This is the smallest available UBI because it only includes the bare minimum number of packages. 
+	For example, this image does not include a package manager.
+
+### Containerfile instructions
+
+Containerfiles use a small domain-specific language (DSL) consisting of basic instructions for
+crafting container images. The following are the most common instructions.
+
+- FROM  
+	Sets the base image for the resulting container image. Takes the name of the base image as an 
+	argument.
+
+- WORKDIR  
+	Sets the current working directory within the container. Instructions that follow the WORKDIR instruction
+	run within this directory.
+
+- COPY and ADD  
+	Copy files from the build host into the file system of the resulting container image. Relative paths
+	use the host current working directory, known as the build context. Both instructions use the working
+	directory within the container as defined by the WORKDIR instruction.
+
+	The ADD instruction adds the following functionality:
+
+	- Copying files from URLs.
+	- Unpacking tar archives in the destination image.
+
+	Because the ADD instruction adds functionality that might not be obvious, developers tend to prefer
+	the COPY instruction for copying local files into the container image.
+
+- RUN  
+	Runs a command in the container and commits the resulting state of the container to a new layer
+	within the image.
+
+- ENTRYPOINT  
+	Sets the executable to run when the container is started.
+
+- CMD  
+	Runs a command when the container is started. This command is passed to the executable defined by
+	ENTRYPOINT. Base images define a default ENTRYPOINT, which is usually a shell executable, such as Bash.
+
+- USER  
+	Changes the active user within the container. Instructions that follow the USER instruction run
+	as this user, including the CMD instruction. It is a good practice to define a different user other
+	than root for security reasons.
+
+- LABEL  
+	Adds a key-value pair to the metadata of the image for organization and image selection.
+
+- EXPOSE  
+	Adds a port to the image metadata indicating that an application within the container binds to this
+	port. This instruction does not bind the port on the host and is for documentation purposes.
+
+- ENV  
+	Defines environment variables that are available in the container. You can declare multiple ENV
+	instructions within the Containerfile. You can use the env command inside the container to view
+	each of the environment variables.
+
+- ARG  
+	Defines build-time variables, typically to make a customizable container build. Developers commonly 
+	configure the ENV instructions by using the ARG instruction. This is useful for preserving the 
+	build-time variables for runtime.
+
+- VOLUME  
+	Defines where to store data outside of the container. The value configures the path where Podman
+	mounts persistent volume inside of the container. You can define more than one path to create
+	multiple volumes.
+
+Each Containerfile instruction runs in an independent container by using an intermediate image built
+from every previous command. This means each instruction is independent from other instructions in
+the Containerfile. The following is an example Containerfile for building a simple Apache web server
+container:
+
+	Example of a Containerfile
+	---
+	# This is a comment line #1
+	FROM        registry.redhat.io/ubi8/ubi:8.6 #2
+	LABEL       description="This is a custom httpd container image" #3
+	RUN         yum install -y httpd #4
+	EXPOSE      80 #5
+	ENV         LogLevel "info" #6
+	ADD         http://someserver.com/filename.pdf /var/www/html #7
+	COPY        ./src/   /var/www/html/ #8
+	USER        apache #9
+	ENTRYPOINT  ["/usr/sbin/httpd"] #10
+	CMD         ["-D", "FOREGROUND"] #11
+	---
+	
+	Explaination for the above Containerfile
+	---
+	#1: Lines that begin with a hash, or pound, sign (#) are comments.  
+	#2: The FROM instruction declares that the new container image extends the registry.redhat.io/ubi8/ubi:8.6 
+		container base image.
+	#3: The LABEL instruction adds metadata to the image.
+	#4: RUN executes commands in a new layer on top of the current image. The shell that is used to
+		execute commands is /bin/sh.
+	#5: EXPOSE configures metadata indicating that the container listens on the specified network port
+		at runtime.
+	#6: ENV is responsible for defining environment variables that are available in the container.
+	#7: The ADD instruction copies files or directories from a local or remote source and adds them
+		to the container's file system.
+	#8: COPY copies files from a path relative to the working directory and adds them to the container's
+		file system.
+	#9: USER specifies the username or the UID to use when running the container image for the RUN,
+		CMD, and ENTRYPOINT instructions.
+	#10: ENTRYPOINT specifies the default command to execute when users instantiate the image as a
+		container.
+	#11 CMD provides the default arguments for the ENTRYPOINT instruction.  
+	---
+
+
+
+
+
+
+
+
+
+
+
 
 
 

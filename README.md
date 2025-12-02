@@ -43,6 +43,7 @@ Ingen inspelning
 Inställt pga sjukdom
 
 - **Tisdag 2025dec02 18-20, v49 (utb v06)**  
+Handledning  
 
 
 - **Tisdag 2025dec09 18-20, v50 (utb v07)**  

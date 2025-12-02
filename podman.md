@@ -138,7 +138,6 @@ Basic operations that can be used to manage containers.
 		With the *'-p'* parameter you expose the incoming port to the containers port. In the above example
 	 	port 8080 are exposed in podman and it will connect to post 80 on the specified container.
 
-
 - Stopping container gracefully, *'podman stop ...'*  
 	When stopping a container Podman sends a SIGTERM signal to the container to start the cleanup procedure
 	before. If the container does not reply to the SIGTERM signal Podman sends a SIGKILL signal to the 
@@ -250,7 +249,6 @@ Basic operations that can be used to manage containers.
 	If you do not specify a tag you automatically use the tag "latest"  
 
 
-
 ### Manage registry credentials with Podman
 
 Some registries require you to authenticate before you are able to anything or something specific.  
@@ -267,6 +265,195 @@ After you are logged in the credentials are stored in auth.json file in a specia
 	${XDG_RUNTIME_DIR}/containers/auth.json file,  
 	the ${XDG_RUNTIME_DIR} refers to a specific directory.  
 	The credentials are encoded in base64 format.
+
+---
+
+## MANAGING IMAGES
+
+For the complete list of image-related commands, execute 'podman image --help' in a terminal window.
+
+- Image versioning and tags
+	Tag is a way for the developer to keep track of the version of the container image. Normally when
+	you update the application you need to keep the dependencies and sometimes even the container OS
+	up to date. The best way of keeping track is to use tags on your container images.
+	
+	It is possible to create a new container image with a new name and tag from a local stored image,
+	'podman image tag myapp:v23 myapp_v24': Have copied the container image and supplied it with a new
+	tag
+
+- Search image, 'podman search ...'
+	It is possible for you to search in the CLI for the different registries that you are connected to
+	by using 'podman search ...'. You get the full container image address and often a description.
+	
+	After you found yor image you can either use 'podman pull ...' or 'podman image pull ...' to get
+	the container image downloaded to your local storage.  
+	A non-root uses that pulls images are stored in "~/.local/share/containers directory".  
+	While images pulled by root is stored in "/varlib/containers directory".
+	
+	To see what container images that exists in iyour local storage use 'podman image ls'. Only a root
+	user can see a root downloaded image container.
+
+- Build images, 'podman build ...'
+	An image can be build from a "Containerfile". The file must be pointed to when you do the build.
+	When you name your container image that you build you must think about which registry you want to
+	use otherwise it will stay in you local registry.
+	
+		'cat Containerfile'  
+			FROM nginx:latest
+	
+		The simplest build from a local stored image
+		
+		'podman build --file Containerfile --tag my_nginx:v1'  
+		Building the image from the Container file but only giving it a name and varsion (tag)
+		
+		'podman image ls'
+			REPOSITORY               TAG         IMAGE ID      CREATED      SIZE
+			localhost/my_nginx       v1          d261fd19cb63  4 weeks ago  155 MB
+			docker.io/library/nginx  latest      d261fd19cb63  4 weeks ago  155 MB
+		
+		You can see the new image that was built and the original image that was used
+		
+		'podman image tag localhost/my_nginx:v1 docker.io/johnnybravo/my_nginx:v1'
+		"Copying" the newly built image and tagging it with a real registry url, user, ...
+		
+		'podman image ls'
+			REPOSITORY                      TAG         IMAGE ID      CREATED      SIZE
+			docker.io/johnnybravo/my_nginx  v1          d261fd19cb63  4 weeks ago  155 MB
+			localhost/my_nginx              v1          d261fd19cb63  4 weeks ago  155 MB
+			docker.io/library/nginx         latest      d261fd19cb63  4 weeks ago  155 MB
+		
+		You can now see the new container image that is ready to be pushed to the registry
+	
+	Besides inspect the image and is data you can also see how the image has been build and it layers
+	by using the "tree" option, 'podman image tree ...'
+	
+	It makes it possible to see and even identify eack layer and its size.
+	
+		'podman image tree docker.io/library/nginx:latest' 
+			Image ID: d261fd19cb63
+			Tags:     [docker.io/library/nginx:latest]
+			Size:     155.5MB
+			Image Layers
+			├── ID: 36d06fe0cbc6 Size: 81.04MB
+			├── ID: 40563e6a01a7 Size:  74.4MB
+			├── ID: 0b9737d30a90 Size: 3.584kB
+			├── ID: b54819a4cde4 Size: 4.608kB
+			├── ID: d52725a1d761 Size:  2.56kB
+			├── ID: a527a4b607a3 Size:  5.12kB
+			└── ID: 36333c84592c Size: 7.168kB Top Layer of: [docker.io/library/nginx:latest]
+
+- Push images, 'podman push ...'
+	After a build you should always push an container image to a registry, public or private, to make
+	sure that it is accessable. Normally you have to be logged into the registry to complete the push
+	
+		'podman push docker.io/johnnybravo/my_nginx:v1'
+		It is that simple and why you add the registry address to its name
+
+- Inspect images, 'podman image inspect ...'
+	You can inspect a contaienr image ang get usefull information from it like, default user, 
+	environmental variables, entry-point, cmd, workinddirectory, labels and so on.
+	
+	Like inspect for ther things you can use the "--format=..." flag to get something specifically.
+	
+	Normally you use Podman to do the image inpection of the local stored images but you can use 'skopeo'
+	tool to do the same instection on remote stored images.
+	
+- Remove images, 'podman image rm ...' or 'podman rmi ...'
+	Container images that are no longer used can be deleted locally.  
+	Make sure that the image is not in use in a container instance.
+	
+		'podman image rm nginx:latest'
+		Remove the image, but sometimes that wont work
+		
+		'podman image rm -f nginx:latest'
+		Then you can use force, "-f" to remove the image
+		
+		'podman rmi httpd:latest'
+		Using the "shortcut" to delete an image
+
+	Sometimes when you have built and removed images other images may remain that is not refrenced by
+	other images are considered dangling images. These images only takes up space, to clean up you can
+	use the prune command with images, 'podman image prune.
+	
+	It is also possible to remove all images that are not in current use
+	
+		'podman image prune'
+		Removes all dangeling images
+		
+		'podman image ls'
+			REPOSITORY               TAG         IMAGE ID      CREATED      SIZE
+			docker.io/library/httpd  latest      c00bfb4edfeb  2 weeks ago  120 MB
+			docker.io/library/nginx  latest      d261fd19cb63  4 weeks ago  155 MB
+			
+		'podman ps -all'
+			CONTAINER ID  IMAGE                           COMMAND               CREATED        STATUS        PORTS       NAMES
+			3816e2151050  docker.io/library/nginx:latest  nginx -g daemon o...  2 minutes ago  Up 2 minutes  80/tcp      web
+		
+		'podman image prune -a'
+		Removes all dangeling images AND all container images not in use.
+		
+		'podman image ls'
+			REPOSITORY               TAG         IMAGE ID      CREATED      SIZE
+			docker.io/library/nginx  latest      d261fd19cb63  4 weeks ago  155 MB
+
+---
+
+## EXPORTING and IMPORTING
+
+### Containers (running)
+
+It is possible to export a container as a tar file on the local machine there after you can move it as any
+other file. The export creates a snapshot of the container but in suashes the image layers into a single
+layer and removes the metadata from the image. The export must be specified to an output the tar file by
+using "-o" or "--output".
+
+After that the tar file can be used to import as a container image.
+
+	'podman ps -all'
+		CONTAINER ID  IMAGE                           COMMAND               CREATED         STATUS         PORTS       NAMES
+		3816e2151050  docker.io/library/nginx:latest  nginx -g daemon o...  46 minutes ago  Up 46 minutes  80/tcp      web
+
+	'podman export -o nginx.tar web'
+	Export the running container named "web" as the tar file "nginx.tar" to the locla file system
+	
+	'podman image ls'
+		REPOSITORY               TAG         IMAGE ID      CREATED      SIZE
+		docker.io/library/nginx  latest      d261fd19cb63  4 weeks ago  155 MB
+		
+	Current container images
+	
+	'podman import nginx.tar newnginx:e01'
+	Import the exported container as a container image named "newnginx:e01"
+	
+	'podman image ls'
+		REPOSITORY               TAG         IMAGE ID      CREATED        SIZE
+		localhost/newnginx       e01         f0f5b89aca9d  6 minutes ago  154 MB
+		docker.io/library/nginx  latest      d261fd19cb63  4 weeks ago    155 MB
+
+	The imported container images now exits as a localhost image. You can use 'podman image tag ...'
+	to change to a registry and a different name.
+
+### Container images
+
+To export and import a container image is more or less the same way as a container instance. You use
+"save" and "load" instead. The big diffrence is that the image layers does not get squashed and the metadata
+is kept.
+
+The downside that you can not specify another image name when you import it, it uses the name when the
+container image had when it was exported. Therefore it may override a image with the same name, be aware.
+
+	'podman image ls'
+		REPOSITORY               TAG         IMAGE ID      CREATED        SIZE
+		localhost/newnginx       e01         f0f5b89aca9d  6 minutes ago  154 MB
+		docker.io/library/nginx  latest      d261fd19cb63  4 weeks ago    155 MB
+		
+	Current container images
+	
+	'podman save --output nginx2.tar localhost/newnginx:e01'
+	Save the container image to a tar file named "nginx2.tar"
+	
+	'podman load --input nginx2.tar'
+	Importing the container image 
 
 ---
 
@@ -571,7 +758,6 @@ The container section tells in the Quadlet unit file
 
 1. Adds additional parameters for the entrypoint (/etc/os-release)
 
-
 The Quadlet unit files use the <serviceName>.container naming pattern and can be stored in the following
 paths:
 
@@ -591,13 +777,13 @@ configuration.
 
 To manage a Quadlet service, use the systemctl command.
 
-	systemctl --user [start, stop, status, enable, disable] container-web.service
+	'systemctl --user [start, stop, status, enable, disable] container-web.service'
 
 When you use the --user option, by default, systemd starts the service at your login, and stops it at your
 logout. You can start your enabled services at the operating system boot, and stop them on shutdown, by
 running the loginctl enable-linger command.
 
-	loginctl enable-linger
+	'loginctl enable-linger'
 
 To revert the operation, use the loginctl disable-linger command.
 
