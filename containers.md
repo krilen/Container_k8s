@@ -318,20 +318,120 @@ container:
 	#11 CMD provides the default arguments for the ENTRYPOINT instruction.  
 	---
 
+### Advanced Containerfile instructions
+
+Downsides of a container that should be avoided
+
+- The container is bound to a specific environment, and requires a rebuild before deploying to a
+	production environment.
+- The container contains developer tools, such as a debugger, text editors, or compilers.
+- The container contains build-time dependencies that are not necessary at runtime.
+- The container generates a large volume of files stored on the copy-on-write file system,
+	which limits the performance of the application.
+
+How to limit the above issues:
+
+- Reducing image storage footprint by using the multistage container build pattern.
+- Customizing container runtime with environment variables.
+- Using volumes to decrease the container size and increase the performance of writing files.
+
+#### The ENV Instruction
+Lets you specify environmental deoendent configuration, hostname, ports, username, ... The containerized
+application can use the environmental variables at run-time.
+
+	ENV DB_HOST="database.example.com"
+	Using the format key=value in the Container file 
+
+	Then in your application you retrive the environmental varaible
+	
+	Example in Python 
+	-----
+	from os import environ
+	
+	DB_HOST = environ.get('DB_HOST')
+	# Connect to the database at DB_HOST...
+
+#### The ARG Instruction
+Lets you define a build-time variable inside of the Containerfile that is used in some ways. 
+
+	Containerfile
+	-----
+	ARG VERSION="1.16.8" BIN_DIR=/usr/local/bin/
+	RUN curl "https://dl.example.io/${VERSION}/example-linux-amd64" -o ${BIN_DIR}/example
+	-----
+	
+	Variables are VERSION and BIN_BIR that are later used in the Containerfile
+
+But you are able during build-time to override it by the flag "--build-arg key=value".
+
+	Containerfile
+	-----
+	ARG ENGINE="nginx:latest"
+	FROM ${ENGINE}
+	-----
+	
+	'podman build -t newweb:01 .'
+	When doing a build without the override (flag) this becomes a nginx based container image
+	
+	'podman image tree newweb:01'
+		...
+		Tags:     [localhost/newweb:01 docker.io/library/nginx:latest]
+		...
+	└── ID: 36333c84592c Size: 7.168kB Top Layer of: [localhost/newweb:01 docker.io/library/nginx:latest]
+	
+	'podman build -t newweb:02 --build-arg ENGINE=httpd:latest .'
+	But when overriding the build arg you get a apache based container image
+
+	'podman image tree newweb:02'
+		...
+		Tags:     [localhost/newweb:02 docker.io/library/httpd:latest]
+		...
+	└── ID: c3beac339b7b Size: 3.584kB Top Layer of: [localhost/newweb:02 docker.io/library/httpd:latest]
+	
+By using arguments (build-time variable) you can use them together with environmental variables. It
+is even possible to set default arguments values if they are not provided with the "--build-arg" flag.
+When not supplying a deafult value for the argument you must configure the ENV default value
+
+	Containerfile
+	-----
+	ARG VERSION BIN_DIR=/usr/local/bin/
+
+	ENV VERSION=${VERSION:-1.16.8} BIN_DIR=${BIN_DIR}
+
+	RUN curl "https://dl.example.io/${VERSION}/example-linux-amd64" -o ${BIN_DIR}/example
+	-----
+	
+	When running the build two "build-arg" can be supplied.  
+	For argument "VERSION" there is no value so the ENV value for it must have a default value ny using
+	"ENV VERSION=${VERSION:-1.16.8}"  
+	For argument "BIN_DIR" a default value is defined.
+
+#### The VOLUME Instruction
+Is used to instruct a persistently store data. The value provides is the patch where the persistant
+volume inside of the container is mounted.
+
+	FROM registry.redhat.io/rhel9/postgresql-13:1
+
+	VOLUME /var/lib/pgsql/data
+
+#### The ENTRYPOINT and CMD Instruction
+Allows you to speciify the command to be executed when the container start. A valid Containerfile must
+have at least one of these instructions.
+
+An ENTRYPOINT defines an executable or command that is always a port of the container execution.
 
 
 
 
 
 
+---
 
+## PERSISTENT DATA
 
-
-
-
-
-
-
+- 'podman volume prune': remove unused volumes
+- 'podman volume create VOLUME_NAME': create
+- 'podman volume ls': list
 
 
 
