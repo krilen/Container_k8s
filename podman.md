@@ -12,6 +12,9 @@ Podman comes in the form of a CLI which is supported by severla OS. Along with t
 two additional ways to interact with your containers and automated processes, the RESTful API and the
 GUI Podman Desktop.
 
+https://docs.podman.io/en/latest/
+
+
 ---
 
 ## INSTALLATION
@@ -395,6 +398,48 @@ For the complete list of image-related commands, execute 'podman image --help' i
 		'podman image ls'
 			REPOSITORY               TAG         IMAGE ID      CREATED      SIZE
 			docker.io/library/nginx  latest      d261fd19cb63  4 weeks ago  155 MB
+
+### Multistage builds
+
+The basic build is a simple Containerfile with all of the information.
+
+A multistage build uses multiple "FROM" instructions to create independednt container build processes,
+also called stages. Every stage can have different base images och you can copy files between the different
+stages. The last containuer build will be the container image that you will use.
+
+By using mutlistage build you can reduce the container image size and only keep the necessary run-time dependencies.
+
+An example would be that you first build a container with the environment for the 
+application with all of dependencies. Than you compile the application and copy the compiled application
+to another container. You could also add a stage for testing or insert it in the first stage.
+
+	Containerfile 
+	-----
+	# Stage 1
+	FROM registry.access.redhat.com/ubi8/nodejs-14:1 as builder #1
+	COPY ./ /opt/app-root/src/
+	RUN npm install
+	RUN npm run build #2
+
+	# Stage 2
+	FROM registry.access.redhat.com/ubi8/nginx-120 #3
+	COPY --from=builder /opt/app-root/src/ /usr/share/nginx/html #4
+	----
+	
+	Explaination for the above Containerfile
+	---
+	#1: Define the first stage with an alias. The second stage uses the builder alias to reference
+		this stage. Uses a Node.js contariner image.
+	#2: Build the application.
+	#3: Define the second stage without an alias. It uses the ubi8/nginx-120 base image to serve 
+		the production-ready version of the application. Uses an nginx container image.
+	#4: Copy the application files to a directory in the final image. The "--from" flag indicates
+		that Podman copies the files from the builder stage.
+	-----
+
+The above example in the Container files uses 2 stages because of the hugh amount of packages that
+gets installer during 'npm install'. After the build is complete in stage 1 container only what is
+in "/opt/app-root/src/" is moved into the stage 2 container. 
 
 ---
 
