@@ -112,6 +112,73 @@ and written is used for runtime file operations such as wotking files, temp file
 container is deleted this layer is deleted. Meaning that this layer is not suitable for storage, to keep
 data beyond a container lifetime (database, ...) a persistant container storage is needed.
 
+### Examin container layers
+
+A container image use a copy-on-write (COW) layered filesystem. When you RUN, COPY or ADD instructions
+you add a layer (sometime called a blod). 
+
+By using a layered COW file system it will remain the container immutable. After the start of the container
+a writable layer will be created and mounted on top of the other layers. When the container is stopped this
+layer will be deleted and that means that the container image will always stay identical except the writable
+layer.
+
+#### Cache image layers
+
+When an instuction for a layer is done it has done some changes. If you do this change for different container
+that you build this layer can be shared between the containers that you build.
+
+This means that the container layer is cached and the build time will be decreased.
+
+If the layer will be built and then stored to cache if needed.
+
+#### Reduse Image layers
+
+It is possible to reduse the number of layers by chnage the Containerfile Instructions
+
+	From
+	-----
+	RUN mkdir /etc/gitea
+	RUN chown root:gitea /etc/gitea
+	RUN chmod 770 /etc/gitea
+	-----
+	Contains 3 RUN instruction meaning 
+	
+	To
+	-----
+	RUN mkdir /etc/gitea && \
+		chown root:gitea /etc/gitea && \
+		chmod 770 /etc/gitea
+	-----
+	Contains 1 RUN instuction seperated on 3 lines using "\"
+	
+Downside to chaining instuction commands is debugging issues that may occur with the build but the
+upside is that less container image layers get created.
+
+Another thing that can be done is to use the create Containerfiles that do not use chained commands
+and you configure to squash the layers. Using "--squash" flag to squash layers declared in the
+Containerfile. You could also use the flag "--squash-all" to also squash the layers from
+the parent/base image.
+
+	Three different builds
+	------
+	'podman build -t localhost/not-squashed .'
+	'podman build --squash -t localhost/squashed .'
+	'podman build --squash-all -t localhost/squashed-all .'
+
+	'podman images --format="{{.Names}}\t{{.Size}}"' ->
+		[localhost/not-squashed:latest]  419 MB #1
+		[localhost/squashed:latest]      419 MB #2
+		[localhost/squashed-all:latest]  394 MB #3
+
+	Explaination to the result of the builds
+	------
+	#1: The base image size is 419MB.
+	#2: When Podman squashed the image layers, the image size stayed the same but the number of layers is lower.
+	#3: When Podman squashed the layers of the container image and its parent image, the size reduced by 25MB.
+
+Developers commonly reduce the number of layers by using multistage builds in combination with chaining
+some commands.
+
 ---
 
 ## CONTAINER REGISTRY
@@ -282,7 +349,7 @@ the Containerfile. The following is an example Containerfile for building a simp
 container:
 
 	Example of a Containerfile
-	---
+	-----
 	# This is a comment line #1
 	FROM        registry.redhat.io/ubi8/ubi:8.6 #2
 	LABEL       description="This is a custom httpd container image" #3
@@ -294,10 +361,10 @@ container:
 	USER        apache #9
 	ENTRYPOINT  ["/usr/sbin/httpd"] #10
 	CMD         ["-D", "FOREGROUND"] #11
-	---
+	-----
 	
 	Explaination for the above Containerfile
-	---
+	-----
 	#1: Lines that begin with a hash, or pound, sign (#) are comments.  
 	#2: The FROM instruction declares that the new container image extends the registry.redhat.io/ubi8/ubi:8.6 
 		container base image.
@@ -316,7 +383,7 @@ container:
 	#10: ENTRYPOINT specifies the default command to execute when users instantiate the image as a
 		container.
 	#11 CMD provides the default arguments for the ENTRYPOINT instruction.  
-	---
+	-----
 
 ### Advanced Containerfile instructions
 
@@ -418,13 +485,159 @@ volume inside of the container is mounted.
 Allows you to speciify the command to be executed when the container start. A valid Containerfile must
 have at least one of these instructions.
 
-An ENTRYPOINT defines an executable or command that is always a port of the container execution.
+An ENTRYPOINT defines an executable or command that is ALWAYS a part of the container execution. Meaning
+any additionl arguments are passed to the command.
 
+	Containerfile
+	-----
+	FROM registry.access.redhat.com/ubi8/ubi-minimal:8.5
+	ENTRYPOINT ["echo", "Hello"]
+	-----
+	
+	In the above example the command is "echo" and the argument to that command is "Hello".  
+	
+	'podman run my-image' -> "Hello"
+	When running this container build from the above Containerfile it would print "Hello".
+	
+	'podman run my-image Red Hat' -> "Hello Red Hat"
+	When running this container build from the above Containerfile it would print "Hello Red Hat".	
 
+If you used CMD instead of an ENTRYPOINT in a Container file you alwasy overrides the ENTYPOINT when adding
+an argument when running the container
 
+ 	Containerfile
+	-----
+	FROM registry.access.redhat.com/ubi8/ubi-minimal:8.5
+	CMD ["echo", "Hello"]
+	-----
+	
+	The setup in this Containerfile is as above example but we use CMD instead of ENTRYPOINT
+	
+	'podman run my-image' -> "Hello"
+	When running this container build from the above Containerfile it would print "Hello".
+	
+	'podman run my-image Red Hat' -> **ERROR**
+	An error would occur: "Error: crun: executable file `Red` not found in $PATH: No such file or ..."
+	
+	'podman run my-image echo Hello Red Hat' -> "Hello Red Hat"
+	To make it work like ENTRYPOINT we need to add it all including the command.
+	
+If is possible to mix ENTRYPOINT and CMD but you need to be aware of the diffrence and also the order of
+the placement.
 
+ 	Containerfile
+	-----
+	FROM registry.access.redhat.com/ubi8/ubi-minimal:8.5
+	ENTRYPOINT ["echo", "Hello"]
+	CMD ["Red", "Hat"]
+	-----
+	
+	'podman run my-image' -> "Hello Red Hat"
+	Running the container built by from Containerfile without any extra argument it would just output
+	"Hello Red Hat".
 
+	'podman run my-image Podman' -> "Hello Podman"
+	Adding an argument to the same contaienr would alter the output to "Hello Podman".
+	Since the command 'echo' and argument "Hello" is used in the ENTRYPOINT it would ALWAYS execute
+	but the CMD arguments would be replaced by "Podman".
 
+Since the ENTRYPOINT is always executed there might be a time you wish to avoid this to do that you
+need to use the flag "--entrypoint" to override the existing ENTRYPOINT. 
+
+	Containerfile
+	-----
+	FROM registry.access.redhat.com/ubi8/ubi-minimal:8.5
+	ENTRYPOINT ["echo", "Hello"]
+	-----
+
+	'podman run --entrypoint whoami my-image' -> "root"
+	Overriding the current ENTRYPOINT
+
+Both the ENTRYPOINT and CMD has two formats to provide the instructions.
+
+- Text array
+	The executables takes the form of a text array
+	
+		ENTRYPOINT ["executable", "param1", "param2", ..., paramN]
+		
+	You need to supply the full path to the executable when using this ways
+	
+- String form
+	The command and parameter are written in a text form
+	
+		CMD executable param1 param2 ... paramN
+		
+	The string form is wrapped in a shell like 'sh -c "executable param1 param2 ... paramN"'
+	When you require shell processing this is useful specifically when the need for variable
+	substitution.
+	
+		FROM registry.access.redhat.com/ubi8/ubi-minimal:8.5
+		LABEL GREETING="World"
+		ENTRYPOINT echo Hello "${GREETING}"
+	
+---
+
+## PODMAN SECRETS
+
+A secret is a blob of sensitive information that is needed by the container during run-time like password,
+username, keys, ... After you seperatly create the secret you will instruct the container to make it
+available for the appliaction when the container start, example could be username and password for a db.
+You use 'podman secret ...' command to work with the SECRETS.  
+The secret entries are stored locally on the machine
+
+### Managing Podamn secrets
+
+- Create secrets, 'podman secret create ...'
+	podman supports different drivers to store secrets by using the "--driver" or "-d" you can select
+	one of the supported drivers.
+	
+	- file (default): Stores the secret in a read-protected file
+	- pass: Stores the secret in a GBG-encrypted file
+	- shell: Manages the secret storage by using a custom script.
+	
+		'printf "secretpass" | podman secret create secret1 -'
+		The secret "secretpass" will be stored in the secret named "secret1"
+	
+		'echo -n mysecter > ./secret'
+		'podman secret create secret2 ./secret'
+		Place the secret i a file, "secret", then use this file to create the secret, "secret2"
+		
+		'podman secret create --driver=pass my_secret ./secret.txt.gpg
+		Using the same file again with the secret and creating a GPG encrypted file, "secret.txt.gpg"
+
+- List secrets, 'podman secret ls'
+	Listing the current secrets in the system to which driver and when the secret was created and updated.
+	
+		'podman secret ls'
+			ID                         NAME        DRIVER      CREATED         UPDATED
+			e941c1956a33ba808a8b0b3a4  secret1     file        56 minutes ago  56 minutes ago	
+	
+- Replace a secret, 'podman secret create --replace ...'
+	Used to replace a current existing secret.
+	
+- Remove secrets, "podman secret rm ..."
+
+		'podman secret rm secret1'
+		Remove the secret named "secret1"
+
+### Using secrets in Containers
+
+After a secret has been created you can use it in a container by using the flag "--secret" and the name
+of the secret that you would like to use. When you use the secret it is placed on a tmpfs volumenand
+get mounted inside of the container in the "/run/secrets" directory as a file based on the name of the
+secret. The secret will be readable by any application.
+
+	'printf "MYp@ssw0rd" | podman secret create password1 -'
+	Create a secret with the name "password1"
+	
+	'podman run -it --secret password1 container:cmd /bin/bash'
+	Start a container with the secret and get a shell prompt to it (only to verify the password).
+	
+	'cat /run/secrets/password1' -> "MYp@ssw0rd"
+	The secret has been placed in a file under "/run/secrets/" with the name of the secret, "password1"
+
+Podman never gets stored in the container itself, neither does 'podman commit' nor "podman export" command copy the secret to an image or tar file.
+	
 ---
 
 ## PERSISTENT DATA
