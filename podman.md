@@ -832,7 +832,72 @@ running the loginctl enable-linger command.
 
 To revert the operation, use the loginctl disable-linger command.
 
+---
 
+## PODMAN SECRETS
+
+A secret is a blob of sensitive information that is needed by the container during run-time like password,
+username, keys, ... After you seperatly create the secret you will instruct the container to make it
+available for the appliaction when the container start, example could be username and password for a db.
+You use 'podman secret ...' command to work with the SECRETS.  
+The secret entries are stored locally on the machine
+
+### Managing Podman secrets
+
+- Create secrets, 'podman secret create ...'
+	Podman supports different drivers to store secrets by using the "--driver" or "-d" you can select
+	one of the supported drivers.
+	
+	- file (default): Stores the secret in a read-protected file
+	- pass: Stores the secret in a GBG-encrypted file
+	- shell: Manages the secret storage by using a custom script.
+
+	Example on how to create a Podman secret
+	
+		'printf "secretpass" | podman secret create secret1 -'
+		The secret "secretpass" will be stored in the secret named "secret1"
+		
+		'echo -n mysecret > ./secret'
+		'podman secret create secret2 ./secret'
+		Place the secret i a file, "secret", then use this file to create the secret, "secret2"
+		
+		'podman secret create --driver=pass my_secret ./secret.txt.gpg
+		Using the same file again with the secret and creating a GPG encrypted file, "secret.txt.gpg"
+
+- List secrets, 'podman secret ls'  
+	Listing the current secrets in the system to which driver and when the secret was created and updated.
+	
+		'podman secret ls'
+			ID                         NAME        DRIVER      CREATED         UPDATED
+			e941c1956a33ba808a8b0b3a4  secret1     file        56 minutes ago  56 minutes ago	
+	
+- Replace a secret, 'podman secret create --replace ...'  
+	Used to replace a current existing secret.
+	
+- Remove secrets, "podman secret rm ..."  
+
+		'podman secret rm secret1'
+		Remove the secret named "secret1"
+
+### Using secrets in Containers
+
+After a secret has been created you can use it in a container by using the flag "--secret" and the name
+of the secret that you would like to use. When you use the secret it is placed on a tmpfs volumenand
+get mounted inside of the container in the "/run/secrets" directory as a file based on the name of the
+secret. The secret will be readable by any application.
+
+	'printf "MYp@ssw0rd" | podman secret create password1 -'
+	Create a secret with the name "password1"
+	
+	'podman run -it --secret password1 container:cmd /bin/bash'
+	Start a container with the secret and get a shell prompt to it (only to verify the password).
+	
+	'cat /run/secrets/password1' -> "MYp@ssw0rd"
+	The secret has been placed in a file under "/run/secrets/" with the name of the secret, "password1"
+
+Podman never gets stored in the container itself, neither does 'podman commit' nor "podman export" command copy the secret to an image or tar file.
+	
+---
 
 
 
