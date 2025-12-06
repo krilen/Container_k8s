@@ -22,11 +22,11 @@ Not independent
 - Kernel or anything needed to support the running python (not python itself)
 
 A container engine creates a union file by merging container image files. Container image is immutable
-at runtime the container engine adds a writeable layer for modifications. When the container is remove the
-writeable layer is removed.
+at runtime the container engine adds a writeable layer for modifications. When the container is remove 
+the writeable layer is removed.
 
-Containers uses Linux kernel features as namespaces (isolate processes within the container from each other
-and from the host system) and cgroups (CPU allocation time and system memory)
+Containers uses Linux kernel features as namespaces (isolate processes within the container from each
+other and from the host system) and cgroups (CPU allocation time and system memory)
 
 Evolved from *'chroot'* to OCI (Open Container Initative) that organization that defines standards for
 creating and running containers. It is a standard that that different container enigines should conform
@@ -60,15 +60,15 @@ Management sofware is diffrent between containes and VM
 | Portability                 |Generally only same hypervisor | Any OCI-compliant engine                   |
 
 While the management of a container often comes with the container engine while VMs require additional 
-software to be able to manage them. You can also use container orchestrations tools like Openshift, Kubernets, 
-Docker swarm, ... to run and manage containers on a scale.
+software to be able to manage them. You can also use container orchestrations tools like Openshift, 
+Kubernets, Docker swarm, ... to run and manage containers on a scale.
 
 A container (especially that follows OCI) can be run on different container enine a VM can also allwas run
 on a specific hypervision and not a different one.
 
 Both VMs and container can scale but fewer resouces are needed for containers. A normal practice when 
-running large-scale enviroments is to run containes inside of VMs. This takes advantage of the strong points
-in each technology
+running large-scale enviroments is to run containes inside of VMs. This takes advantage of the strong
+points in each technology
 
 ---
 
@@ -78,24 +78,25 @@ By containerize provides advantages for the development process such as easy tes
 
 ### Testing and workflow
 
-An advantage is the ability to scale, a developer can write software and test it locally the deploy it to
-with few or no change. This workflow is useful when writing microservices that are small and short lived
-that are designed to run spin up and down only when needed. Developers that use containers can take advantage
-of Continuous Integration/Continuous Development (CI/CD) pipelines to deploy containers to various environments.
+An advantage is the ability to scale, a developer can write software and test it locally the deploy it
+to with few or no change. This workflow is useful when writing microservices that are small and short
+lived that are designed to run spin up and down only when needed. Developers that use containers can
+take advantage of Continuous Integration/Continuous Development (CI/CD) pipelines to deploy containers
+to various environments.
 
 ### Stability
 
 By having a container that isolates a applications dependent libraries and the different version a developer
-can easy deploy a newer version of the appliaction that has been updated without having to update the host
-system. It is all contained inside the container and will not cause a dependecy issue.
+can easy deploy a newer version of the appliaction that has been updated without having to update the
+host system. It is all contained inside the container and will not cause a dependecy issue.
 
 For example, a container with a specific version of Python ensures that the same version of Python is
 used in every testing or deployment environment.
  
 ### Multi-Container applications
 
-This application is distributed over severla containers. You can run the containers from the same image for
-high availability (HA) replicas, or from several different images.
+This application is distributed over severla containers. You can run the containers from the same image
+for high availability (HA) replicas, or from several different images.
 
 For example, a developer can create an application that includes a database container that runs separately
 from the application's web API container. 
@@ -104,13 +105,30 @@ from the application's web API container.
 
 ## CONTAINER LAYERS
 
-A container image are immutable and layered. Each layer consists of file system differences (diffs). A diff
-contains the changes from the previous layer (adding, removing orch modifying file/s).
+A container image are immutable and layered. Each layer consists of file system differences (diffs) 
+from the previous layer. A diff contains the changes from the previous layer (adding, removing or modifying
+file/s), you do it this way because you are not able to change previous layer only add a layer with
+the change.
 
-When a container is started the writable layer is added called *container layer*, this layer that can be read
-and written is used for runtime file operations such as wotking files, temp filers and log files. When the
-container is deleted this layer is deleted. Meaning that this layer is not suitable for storage, to keep
-data beyond a container lifetime (database, ...) a persistant container storage is needed.
+	'podman image tree nginx:latest'
+		Image ID: d261fd19cb63
+		Tags:     [docker.io/library/nginx:latest]
+		Size:     155.5MB
+		Image Layers
+		├── ID: 36d06fe0cbc6 Size: 81.04MB
+		├── ID: 40563e6a01a7 Size:  74.4MB
+		├── ID: 0b9737d30a90 Size: 3.584kB
+		├── ID: b54819a4cde4 Size: 4.608kB
+		├── ID: d52725a1d761 Size:  2.56kB
+		├── ID: a527a4b607a3 Size:  5.12kB
+		└── ID: 36333c84592c Size: 7.168kB Top Layer of: [docker.io/library/nginx:latest]
+		
+	You are able to see the the container image laýers and their size.
+
+When a container is started the writable layer is added called *container layer*, this layer that can
+be read and written is used for runtime file operations such as wotking files, temp filers and log files.
+When the container is deleted this layer is deleted. Meaning that this layer is not suitable for storage,
+to keep data beyond a container lifetime (database, ...) a persistant container storage is needed.
 
 ### Examin container layers
 
@@ -118,14 +136,30 @@ A container image use a copy-on-write (COW) layered filesystem. When you RUN, CO
 you add a layer (sometime called a blod). 
 
 By using a layered COW file system it will remain the container immutable. After the start of the container
-a writable layer will be created and mounted on top of the other layers. When the container is stopped this
-layer will be deleted and that means that the container image will always stay identical except the writable
-layer.
+a writable layer (run-time layer) will be created and mounted on top of the other layers. When the
+container is stopped this layer will be deleted and that means that the container image will always
+stay identical except the writable layer.
+
+Files that are in the different container image layers are all avialble to the read/write data layer
+by using a union file system. At run-time the container file system consists of a union of files in 
+the defined layers.
+
+When modifying a file or its attrribute at runtime is possible in several steps
+
+- The Container engine (Podman, Docker, ...) locates the requested file in it closest (highest) layer
+	and copies it to th run-time layer.
+- In the run-time layer when the file is available for both read an write operations a containerized
+	process can modify the file.
+
+How the files behave when a process attempts so read or write a file depends on the storage driver.
+Having a unison file system improves read operations. The COW architecture promotes the sharing and 
+reuse of data layers between seperate containers since the layers are immutable. But union file system
+for write-intensive containerized operations ia a performance bottleneck.
 
 #### Cache image layers
 
-When an instuction for a layer is done it has done some changes. If you do this change for different container
-that you build this layer can be shared between the containers that you build.
+When an instuction for a layer is done it has done some changes. If you do this change for different
+container that you build this layer can be shared between the containers that you build.
 
 This means that the container layer is cached and the build time will be decreased.
 
@@ -173,8 +207,10 @@ the parent/base image.
 	Explaination to the result of the builds
 	------
 	#1: The base image size is 419MB.
-	#2: When Podman squashed the image layers, the image size stayed the same but the number of layers is lower.
-	#3: When Podman squashed the layers of the container image and its parent image, the size reduced by 25MB.
+	#2: When Podman squashed the image layers, the image size stayed the same but the number of layers
+		is lower.
+	#3: When Podman squashed the layers of the container image and its parent image, the size reduced
+		by 25MB.
 
 Developers commonly reduce the number of layers by using multistage builds in combination with chaining
 some commands.
@@ -228,7 +264,8 @@ The skopeo command uses the transport:image format, such as *docker://remote_ima
 	
 		'skopeo copy docker://registry.access.redhat.com/ubi9/nodejs-18 docker://quay.io/myuser/nodejs-18'
 		Use the skopeo copy command to copy images between registries. The following example copies the 
-		registry.access.redhat.com/ubi9/nodejs-18:latest image into the quay.io/myuser/nodejs-18 Quay.io repository.
+		registry.access.redhat.com/ubi9/nodejs-18:latest image into the quay.io/myuser/nodejs-18 Quay.io 
+		repository.
 
 		'skopeo copy docker://registry.access.redhat.com/ubi9/nodejs-18 dir:/var/lib/images/nodejs-18'
 		The following example changes the transport format to download an image into a local director
@@ -272,8 +309,8 @@ Variants of UBI images
 	Simplifies running multiple applications within a single container by managing them with systemd.
 
 - minimal  
-	Thiss image is smaller than the init image and still provides nice-to-have features. This image uses 
-	the microdnf minimal package manager instead of the full-sized version of DNF.
+	Thiss image is smaller than the init image and still provides nice-to-have features. This image
+	uses the microdnf minimal package manager instead of the full-sized version of DNF.
 
 - micro
 	This is the smallest available UBI because it only includes the bare minimum number of packages. 
@@ -314,7 +351,8 @@ crafting container images. The following are the most common instructions.
 
 - CMD  
 	Runs a command when the container is started. This command is passed to the executable defined by
-	ENTRYPOINT. Base images define a default ENTRYPOINT, which is usually a shell executable, such as Bash.
+	ENTRYPOINT. Base images define a default ENTRYPOINT, which is usually a shell executable, such as
+	Bash.
 
 - USER  
 	Changes the active user within the container. Instructions that follow the USER instruction run
@@ -502,8 +540,8 @@ any additionl arguments are passed to the command.
 	'podman run my-image Red Hat' -> "Hello Red Hat"
 	When running this container build from the above Containerfile it would print "Hello Red Hat".	
 
-If you used CMD instead of an ENTRYPOINT in a Container file you alwasy overrides the ENTYPOINT when adding
-an argument when running the container
+If you used CMD instead of an ENTRYPOINT in a Container file you alwasy overrides the ENTYPOINT when
+adding an argument when running the container
 
  	Containerfile
 	-----
@@ -522,8 +560,8 @@ an argument when running the container
 	'podman run my-image echo Hello Red Hat' -> "Hello Red Hat"
 	To make it work like ENTRYPOINT we need to add it all including the command.
 	
-If is possible to mix ENTRYPOINT and CMD but you need to be aware of the diffrence and also the order of
-the placement.
+If is possible to mix ENTRYPOINT and CMD but you need to be aware of the diffrence and also the order
+of the placement.
 
  	Containerfile
 	-----
@@ -579,12 +617,6 @@ Both the ENTRYPOINT and CMD has two formats to provide the instructions.
 ---
 
 
-
-## PERSISTENT DATA
-
-- 'podman volume prune': remove unused volumes
-- 'podman volume create VOLUME_NAME': create
-- 'podman volume ls': list
 
 
 

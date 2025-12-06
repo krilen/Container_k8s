@@ -100,9 +100,9 @@ Basic operations that can be used to manage containers.
 	information about different aspects of the container, networking, CPU usage, environment variables, ...
 	
 	The JSON format output is very long and sometimes hard to read. It is possible to use the "--format"
-	flag to filter out desired output, the flag expect a Go template expression as a parameter. The template
-	uses curly braces as delimeter to refrence to elements as fields or keys in a data structure. The data
-	structure is seperated with a . and must strat with an upper case.
+	flag to filter out desired output, the flag expect a Go template expression as a parameter. The 
+	template uses curly braces as delimeter to refrence to elements as fields or keys in a data structure.
+	The data structure is seperated with a . and must strat with an upper case.
 
 		'podman inspect web'  
 		Get the information about a container named "web" (in JSON format)
@@ -255,7 +255,8 @@ Basic operations that can be used to manage containers.
 ### Manage registry credentials with Podman
 
 Some registries require you to authenticate before you are able to anything or something specific.  
-Normally you get something like *"... unable to retrieve auth token: invalid username/password: unauthorized ..."*
+Normally you get something like *"... unable to retrieve auth token: invalid username/password: 
+unauthorized ..."*
 
 To login you use 'podman login ...' command. 
 
@@ -407,7 +408,8 @@ A multistage build uses multiple "FROM" instructions to create independednt cont
 also called stages. Every stage can have different base images och you can copy files between the different
 stages. The last containuer build will be the container image that you will use.
 
-By using mutlistage build you can reduce the container image size and only keep the necessary run-time dependencies.
+By using mutlistage build you can reduce the container image size and only keep the necessary run-time
+dependencies.
 
 An example would be that you first build a container with the environment for the 
 application with all of dependencies. Than you compile the application and copy the compiled application
@@ -447,10 +449,10 @@ in "/opt/app-root/src/" is moved into the stage 2 container.
 
 ### Containers (running)
 
-It is possible to export a container as a tar file on the local machine there after you can move it as any
-other file. The export creates a snapshot of the container but in suashes the image layers into a single
-layer and removes the metadata from the image. The export must be specified to an output the tar file by
-using "-o" or "--output".
+It is possible to export a container as a tar file on the local machine there after you can move it 
+as any other file. The export creates a snapshot of the container but in suashes the image layers into
+a single layer and removes the metadata from the image. The export must be specified to an output the
+tar file by using "-o" or "--output".
 
 After that the tar file can be used to import as a container image.
 
@@ -481,8 +483,8 @@ After that the tar file can be used to import as a container image.
 ### Container images
 
 To export and import a container image is more or less the same way as a container instance. You use
-"save" and "load" instead. The big diffrence is that the image layers does not get squashed and the metadata
-is kept.
+"save" and "load" instead. The big diffrence is that the image layers does not get squashed and the 
+metadata is kept.
 
 The downside that you can not specify another image name when you import it, it uses the name when the
 container image had when it was exported. Therefore it may override a image with the same name, be aware.
@@ -526,8 +528,8 @@ modular and extensible and you can create extensions to provide additional capab
 
 ## PODMAN (CONTAINER) NETWORKS
 
-If you have several container instances running you can isolate them as needed so they only have access to
-only the containers that they need.
+If you have several container instances running you can isolate them as needed so they only have access 
+to only the containers that they need.
 
 Example
 
@@ -537,8 +539,8 @@ Example
 
 You can now create different networks. Create the BO network and place both the database and API container
 in that network. Then create the FO network and place both the API and webserver container in that network.
-Now the webserver can reach the API container and the API container can reach the databse container. The
-webserver container con NOT reach the databse container.
+Now the webserver can reach the API container and the API container can reach the databse container. 
+The webserver container con NOT reach the databse container.
 
 ### Podman network commands
 
@@ -564,8 +566,9 @@ desired network when the container instance is created, not after.
 		- *'podman run -d --net example-net,redis-net nginx:latest'*  
 		The container will be attached to 2 networks.
 		
-	It is possible to use the isolate option with the default brigde driver. This option isolates the network
-	by blocking any traffic from it to any other network, this by using the '-o isolate' parameter.
+	It is possible to use the isolate option with the default brigde driver. This option isolates the 
+	network by blocking any traffic from it to any other network, this by using the '-o isolate'
+	parameter.
 	
 	- ex: *'podman network create -o isolate example-net'*  
 	Creates the isolated network "example-net"
@@ -615,11 +618,11 @@ When you create another network the DNS is enabled
 
 
 If you run a container rootless the nonroot can NOT create network bridge or manage virtual interfaces on
-the host. In thsi case Podman creates the required networking interface on the network namespace. By default
-Podman does not attache rootless containers to the podamn default network.
+the host. In thsi case Podman creates the required networking interface on the network namespace. By 
+default Podman does not attache rootless containers to the podamn default network.
 
-If you need want rootless containers to communicate with each oter then you must createa Podman network and
-attach the containersto it or attach the containers to the default Podman network.
+If you need want rootless containers to communicate with each oter then you must createa Podman network 
+and attach the containersto it or attach the containers to the default Podman network.
 
 ### Container Domain name resolution
 
@@ -644,8 +647,8 @@ The default network
 
 ### Reference External Hosts by name
 
-Whan a container is created Podman adds the host.containers.internal and host.docker.internal hostnames to 
-the containers /etc/hosts file by default.
+Whan a container is created Podman adds the host.containers.internal and host.docker.internal hostnames
+to the containers /etc/hosts file by default.
 
 	'podman run -d --rm --name web nginx': Run container
 	'podman exec -it web cat /etc/hosts': Check the containers host file
@@ -663,17 +666,17 @@ IP address.
 
 ## Port Forwarding
 
-A containers network namespace is isolated mening it is only accessable from other containers in the podman
-network. If the appliaction inside of a container needs to be accesses from the outside a port forward
-needs to be setup from the outside to the container.
+A containers network namespace is isolated mening it is only accessable from other containers in the 
+podman network. If the appliaction inside of a container needs to be accesses from the outside a port 
+forward needs to be setup from the outside to the container.
 
 By using the parameter "-p host_port:container_port" the fowrarding is done.
 
 	'podman run -d -p 8080:80 nginx'  
 	From the outside using port 8080 you can access the containers port 80.
 
-By default you assign the broardcast address of the host machine (0.0.0.0) meaning all networks that the
-host is connected to. This can be avided by specifying an IP address.
+By default you assign the broardcast address of the host machine (0.0.0.0) meaning all networks that
+the host is connected to. This can be avided by specifying an IP address.
 
 	'podman run -d -p 127.0.0.1:8080:80 nginx'  
 	Now only localhost can acces the container using port 8080.
@@ -691,9 +694,9 @@ By using the option "port" you can list the ports for a container
 
 ### Networking in containers
 
-Containes in Podman networks are all assigned private IP addresses for each network. Other containers are
-able to make requests to the IP address. To get a specific IP address from a container you must use the
-option "inspect"
+Containes in Podman networks are all assigned private IP addresses for each network. Other containers
+are able to make requests to the IP address. To get a specific IP address from a container you must
+use the option "inspect"
 
 	podman inspect web -f "{{.NetworkSettings.Networks.fo.IPAddress}}"  -> 10.89.0.2
 	Will get the IP address of the container "web" that is in the network "fo"
@@ -746,8 +749,8 @@ The magic happend when there parameters are used together.
 
 ### Copy files in and out of containers
 
-Some container wont allow you to interact with them like above usning bash. And some container might not
-even have 'cat' installed so you are able to see what is inside of the files of the container.
+Some container wont allow you to interact with them like above usning bash. And some container might 
+not even have 'cat' installed so you are able to see what is inside of the files of the container.
 
 Perhaps you need to modify a file, remember that the chane is not permenent.
 
@@ -824,9 +827,9 @@ To manage a Quadlet service, use the systemctl command.
 
 	'systemctl --user [start, stop, status, enable, disable] container-web.service'
 
-When you use the --user option, by default, systemd starts the service at your login, and stops it at your
-logout. You can start your enabled services at the operating system boot, and stop them on shutdown, by
-running the loginctl enable-linger command.
+When you use the --user option, by default, systemd starts the service at your login, and stops it at
+your logout. You can start your enabled services at the operating system boot, and stop them on shutdown,
+by running the loginctl enable-linger command.
 
 	'loginctl enable-linger'
 
@@ -895,14 +898,427 @@ secret. The secret will be readable by any application.
 	'cat /run/secrets/password1' -> "MYp@ssw0rd"
 	The secret has been placed in a file under "/run/secrets/" with the name of the secret, "password1"
 
-Podman never gets stored in the container itself, neither does 'podman commit' nor "podman export" command copy the secret to an image or tar file.
+Podman never gets stored in the container itself, neither does 'podman commit' nor "podman export" 
+command copy the secret to an image or tar file.
 	
 ---
 
+## Rootless Podman
+
+Before containers a single application was often deployed in its own virtual machine with its own OS.
+There could be several virtual machines running on a single physical machine (host machine). Each of 
+the virtual machines had there own kernel seperated from the host machines kernel.  
+One host machine with it own kernel could run several virtual machines with there own kernel and single
+application.
+
+When containers came along it encourages to run each appliaction in it own container. But each containers
+processes uses the kernel of the host machine. Often the host machine now due to lower resource requirment
+could run more container than virtual nachines and therefore more applications.
+
+The downside is that your where to exploit an application and  gain superuser privilege on the host
+machine you could affect a large-scale outahe. Therefore you must strive to create and maintain appliactions
+that uses the principal of least privilege which might minimize the affect if hacked.
+
+### Analyzing Rootless Containers
+
+Rootless containers or unprivileged containers are containers that do not require administrator privileges.
+
+A container is rootless ONLY when it meets the followin conditions
+
+- The containerized process does not use the root user, which is a special privileged user in Linux
+	and UNIX systems. Such a user is for administrative purposes and has the ID 0.
+- The root user inside of the container is not the root user outside of the container.
+- The container runtime does not use the root user. For example, if your container runtime runs as
+	the root user, then containers managed by such runtime are not rootless containers.
+
+Podman starts each container as a new process the runtime does not require elevated privileges. The 
+Podman process exists after creating the container. Then the container process ID attaches to the 'systemd'
+parent Process ID
+
+#### Other requirements for rootless containers
+Depending on the OS Podman may require host OS setup to run rootless containers.
+
+Prerequisite setup listing
+
+- cgroups v2  
+	Cgroup v2 is a Linux kernel feature that Podman uses to limit container resource use without
+	requiring elevating privileges.  
+	Podman on Red Hat Enterprise Linux 9 (RHEL 9) uses cgroup v2 by default, with the crun container
+	runtime implementation
+	
+- pasta  
+	Podman uses the pasta command from the passt package to implement rootless networking for unprivileged
+	network namespaces.
+
+- fuse-overlayfs  
+	Podman uses the fuse-overlayfs package to manage the Copy-On-Write (COW) file system. Though Podman
+	does not require this package, Red Hat recommends using it for performance reasons. COW file system
+	is discussed later in the course.
+
+- More: https://github.com/containers/podman/blob/v5.2.2/docs/tutorials/rootless_tutorial.md
 
 
+#### Changing the Container User
+
+When a Containerfile is create the user tends to be root, because you may require elevated privileges
+for certain operations, like installing packages or making configuration.
+
+But you should when creating your own container image make sure that root user is not used
+
+	Containerfile
+	-----
+	FROM registry.access.redhat.com/ubi9/ubi
+	CMD ["python3", "-m", "http.server"]
+	-----
+	
+	'podman build -t myhttp --file Containerfile'
+	Build the container image from a Red Hat base image
+	
+	'podman run --rm myhttp:latest id -> "uid=0(root) gid=0(root) groups=0(root)"
+	Because of the container image uses root to start the HTTP server
+
+The above container image is a security risk since the root is the user. If a hacker exploits the application
+and get access to the container and could thefrore after further exploits escape the containerized environmet
+into the host system.
+
+Therefor a change to the container image might be a good idea.
+
+	Containerfile
+	-----
+	FROM registry.access.redhat.com/ubi9/ubi
+
+	RUN adduser \
+	   --no-create-home \
+	   --system \
+	   --shell /usr/sbin/nologin \
+	   python-server
+
+	USER python-server
+
+	CMD ["python3", "-m", "http.server"]
+	-----
+	
+	The RUN instruction runs as root user because it precedes the USER instruction
+	
+	'podman build -t myhttp:rootless --file Containerfile'
+	Build the container image from a Red Hat base image with a special user
+	
+	'podman run --rm myhttp:rootless id -> "uid=998(python-server) gid=998(python-server) groups=998(python-server)"
+	Because of the container image uses now uses "python-server" user to start the HTTP server
+
+Now the container will start the same process but without elevated privileges which will make it harder
+for the hacker to exploit vulnerability and access the host system. The appliaction might be hacked that
+is why you always need to keep it updated.
 
 
+#### Explaining User Mapping
+
+When a hacker gains access to the container file system by a expliot the root inside of the container
+is the same root outide of the system. Meaning if the hacker can escape the container isolation they
+have elevated privileges on the host system and can cause damage.
+
+Podman maps user inside of the container to unprivileged users on the host system by using subordinate
+ ID ranges. Podman defines the allowed ID ranges in the /etc/subuid and /etc/subgid files.
+
+![From REDHAT Academy](podman/user_mapping.svg)
+
+Example
+
+	'cat /etc/subuid /etc/subgid'
+		student:100000:65536
+		student:100000:65536
+	
+With the above information it means that the "student" user can allocate 65536 user IDs starting with
+the ID 100000. This leads to the HostUserID = 100000 + ContainerUserID -1 mapping, where user ID 1 in
+a container is mapped to the host user ID 100000 and so on.
+
+The user ID 0, root, is an exception because the root user maps to the user ID that started the container.
+For example, if a user with the user ID 1000 starts the container that uses the root user, then the root
+user maps to the host user ID 1000.
+
+The files /etc/subuid /etc/subgid  must exists before defining the subordinate ID ranges with the 'usermod'.
+
+	'sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 student'
+	To generate the subordinates ID range using the 'usermod'
+	
+	'podman system migrate'
+	After the rage is defines you must execute the migration for the new subordinate ID ranges to
+	take affect.
+
+Change in /etc/subuid /etc/subgid ???
+
+Now when a container is running (sfter any restart after the migaration) you can see the new mapping
+that differ from the inside and outside of a running container
+
+	podman run --rm -it registry.access.redhat.com/ubi9/ubi /bin/bash'
+		[root@73a87c800d5d /]# id -> "uid=0(root) gid=0(root) groups=0(root)"
+
+	Inside of the container I am root with User Id and 0
+	
+	'podman top 73a87c800d5d huser user'
+		HUSER       USER
+		1000        root
+		
+	Outside of the running container user ID 1000 is using the same container.
+
+Shows that the user inside the Container, root, is mapped to user ID 1000 on the host system.
+
+When you execute a container with elevated privileges on the host machine, the root mapping does not
+take place even when you define subordinate ID ranges.
+
+	'sudo podman run --rm -it registry.access.redhat.com/ubi9/ubi /bin/bash'
+		[root@ded563b9e42b /]# id -> "uid=0(root) gid=0(root) groups=0(root)"
+		
+	Same as before I am root with user Id 0
+	
+	'sudo podman top ded563b9e42b huser user'
+		HUSER       USER
+		root        root
+		
+	Outside of the running container urer root is runnin
+
+
+#### Limitations of Rootless Containers
+
+There are limitations on running rootless containers that make certin applications unsuitable to be 
+containerized as rootless containers.
+
+List of limitation of rootless containers.
+
+- Non-trivial Containerization  
+	The application may require the root user, sependet of the application architecture it might not
+	be suitable for rootless containers or might require a deeper understanding of containerize.  
+	An example would be an application such as Nginx or HTTPd start a bootstrap process and then spawn
+	new process with non-privileged user which interacts with external users.
+	
+- Required Use of Privileged Ports or Utilities
+	Rootless containers can not bind to privileged port such as 80 or 443. It is recommended to use 
+	privileged port and used port forwarding insted. If neede to use you can configure the unpriviledge
+	port range.
+	
+		'sudo sysctl "net.ipv4.ip_unprivileged_port_start"' -> "net.ipv4.ip_unprivileged_port_start = 1024"
+		By default the range starts at port 1024
+		
+		'sudo sysctl -w "net.ipv4.ip_unprivileged_port_start=79"'
+		Setting a new start to the unpriviledge port range, can now start binding at port 80 or higher.
+
+	Rootless container can not use utilities that require the root user such as the ping utility. Because
+	the ping utility requires elevated privileges to establish raw sockets which is an action that require
+	the "cap.ipv4.ping_group_range" kernel parameter.
+
+		'sudo sysctl -w "net.ipv4.ping_group_range=0 2000000"'
+		Setting the kernel parameter.
+
+---
+
+## PERSISTENT DATA
+
+Storing data persistently Poman uses external mounts by using *volumes* and *bind* mounts.
+
+This is useful for the following reason
+
+- Persistence  
+	Mounted data are safe during container deletions. Other data in the container in not accessible
+	after container deletions.
+- Use of Host File System  
+	Mounted data does not use the COW file system. Also write-heavy containerized processes can write
+	data to a mount without the limitations of the COW file system for write operations.
+- Ease of sharing
+	Mounted data can be shared across multiple containers at the same time, one contaiiner can write
+	to the mount while another read from it. Mounts are not limited to the host file system they can
+	be hosted over network (NFS protocol as an example).  
+	
+Volumes are data mounts managed by Podman.  
+Bind mounts are data mounts managed by the user.  
+Both mounts uses the flag "-v" or "--volume" with a parameter.
+
+	'... --volume /path/on/host:/patch/in/container:OPTIONS ...'
+	The OPTIONS part is optional. Path are specified by their absolute path or as the relative
+	path accordingly to the working directory
+
+You can also use the flag "--mount" with paramters since this provides a way for a more explicit
+way of specifying the mount.
+
+	'... --mount type=TYPE,source=/path/on/host,destination=/path/in/container ...'
+	
+	'... --mount "type=volume,source=html-vol,destination=/server"
+	Doing a volume mount named "html-vol" attach it to "/server"
+
+The different TYPES that the "--mount" can use is
+
+- bind for bind mounts, managed by users
+- volume for volume mounts, managed by Podman
+- tmpfs for creating memory-only mount.
+
+The "--mount" flag is the preferred way of mounting directories in a container, the "-v" or "--volume"
+is the older but stil used way. 
+
+
+### Bind mount
+
+Often these mounts are used for testing or for mounting of specific environmental files since they
+are managed by the user.
+
+A bind mount can exists anywhere on the host system.
+
+	'podman run -d --rm -p 8080:8080 --volume /www:/var/www/html:ro registry.acc...:latest'
+	This will mount the "/www" directory on the host machine to the "/var/www/html" directory in the
+	container with the read-only option.
+	
+#### Troubleshooting Bind mounts
+
+When you use bind mounts you must configure file permissions and SELinux access manually. SELinux is
+an additionally security mechanism used by Red Hat and oter Linux distributions.
+
+When looking at the following mount example
+
+	'podman run --rm -d --name web -p 8080:8080 --volume /www:/var/www/html registry.access.redhat.com/ubi8/httpd-24:latest'
+	
+	'podman exec web ls -la /var/www/html' ->
+		ls: cannot open directory '/var/www/html': Permission denied
+		
+	'podman exec web ls -la /var/www/' ->
+		total 20
+		drwxr-xr-x. 4 default root   4096 Nov 27 20:23 .
+		drwxr-xr-x. 1 root    root   4096 Nov 27 20:23 ..
+		drwxr-xr-x. 2 default root   4096 Jul 28 16:04 cgi-bin
+		drwxr-xr-x. 2 nobody  nobody 4096 Dec  6 16:23 html
+		
+	'podman stop web'
+
+By default the Httpd process will have insufficient permission to access the "/var/www/html" directory.
+This can be a file permission or an SELinux issue.
+
+The 'podman unshare ...' command executes the provided linux command in a new namespace. The process
+maps the user IDs as they are mapped in a new container which is usefule for toubleshooting user permissions.
+The 'podman unshare ...' can be used to check and even fix issues with the filesystem.
+
+	'podman unshare chgrp -R root /www'
+	Change the group recursive on a directory
+
+To troubleshoot a file permission issue use the 'podman unshare ls -l' command to execute the 'ls -l' command.
+ 
+	'ls -l /www/' -> 
+		total 4
+		-rw-r--r--. 1 root root 72 Dec  6 17:23 index.html
+	'ls -ld /www/' ->
+		drwxr-xr-x. 2 root root 4096 Dec  6 17:23 /www/
+	
+	'podman unshare ls -l /www' -> 
+		total 4
+		-rw-r--r--. 1 nobody nobody 72 Dec  6 17:23 index.html
+	'podman unshare ls -ld /www' ->
+		drwxr-xr-x. 2 nobody nobody 4096 Dec  6 17:23 /www
+
+The above example tells that the "/www" directory and its files.
+
+- The file "index.html" provides the read permission to all uses
+- The directory "/www" is owned by the nobody user and the nobody group in the new namespace
+- The direcory "/www" provides execute permission for all users, which grants all users access to
+	the directory content.
+
+The above tells that the file and directory permissions are correct in the bind mount.
+
+To troubleshoot the SELinux permission issue inspect the "/www directory SELinux configuration by
+running the ls command with the "-Z" flag.
+
+	'ls -Zd /www' -> 
+		unconfined_u:object_r:default_t:s0 /www
+
+Tells that the directory shows the SELinux context label *"unconfined_u:object_r:default_t:s0"*.  
+A container must have the "container_file_t" SELinux type to have access to the bind mount.
+
+To fix the SELinux configuration add the ":z" or ":Z" option to the mount
+
+- ":z" (lower case z): lets different containers shareaccess to a bind mount
+- ":Z" (upper case Z): provides the container with the exclusize access to the bind mount.
+
+Testing again
+
+	'podman run --rm -d --name web -p 8080:8080 --volume /www:/var/www/html:z registry.access.redhat.com/ubi8/httpd-24:latest' ->
+		Error: lsetxattr(label=system_u:object_r:container_file_t:s0) /www: operation not permitted
+	
+	SELinux error!!
+	
+	Fixing the issue with the SELinux:
+	------
+	If the directory /www resides on a file system that supports XATTR, set a directory SELinux 
+	context that corresponds to the podman volume flag :z
+		
+	'sudo chcon -R system_u:object_r:container_file_t:s0 /www'
+	-----
+	
+	'ls -Zd /www' ->
+		"system_u:object_r:container_file_t:s0 /www"
+	
+	'podman run --rm -d --name web -p 8080:8080 --volume /www:/var/www/html:z registry.access.redhat.com/ubi8/httpd-24:latest'
+	Now you are able to run the container with a bind mount.
+
+**OBS!!!** The SELinux fix and how to handle it is outside the scope of this document **OBS!!!**
+
+### Volume mounts
+
+Volumes let Podman manage the data mounts, use volumes to ensure consistent mount behavior across system.
+Also use volumes for advanced uses like mounting a remote volume over NFS.
+
+You can manage volumes by using the 'podman volume ...' command.
+
+	'podman volume ls' ->
+		DRIVER      VOLUME NAME
+		
+	List the created volumes, nothing exists
+	
+	'podman volume create http-data'
+	Create the volume "http-data"
+	
+	'podman volume ls' ->
+		DRIVER      VOLUME NAME
+		local       http-data
+
+	'podman volume inspect http-data' -> 
+		"Name": "http-data",
+		"Driver": "local",
+		"Mountpoint": "/home/student/.local/share/containers/storage/volumes/http-data/_data",
+		"CreatedAt": "2025-12-06T19:27:40.240143067+01:00",
+		...
+	
+	Doing an inspect on the created volume and you can see where it is locally storred.
+
+For rootless containers, Podman stores tlocal volume data in the 
+$HOME/.local/share/containers/storage/volumes/ directory.
+
+To mount a volume to a container instance is simple. Becase Podman is manages the volume there is no
+need to configure SELinux permissions.
+
+	'podman run --rm -d --name web -p 8080:8080 --volume http-data:/var/www/html registry.access.redhat.com/ubi8/httpd-24:latest'
+	'... --volume http-data:/var/www/html ...': map the volume "http-data" to "/var/www/html"
+
+Other podman volume commands
+
+- 'podman volume prune': remove unused volumes
+
+#### Exporting and Importing Data with Volumes
+
+It is possible to import data from a tar archive into an existing Podman volume by using the 'podman volume import ...'
+command. The volume must exist for the import to be possible.
+
+	'podman volume create http-data2'
+	'podman volume import http_data web_data.tar.gz'
+	
+You can also export data from an existing Podamn volume san save it as atar archive on the local machine,
+'podman volume export ...'
+
+	'podman volume export http-data --output web_data.tar.gz'
+
+### Storing Data with a tmpfs Mount
+
+There are applications that can not use the default COW file system in a specific directory for performence
+reasons but use persistence or data sharing for that directory.
+
+In those cases you can use the tmpfs mount type which means that the data in a mount is shortlived but
+does not use the COW file system.
+
+	'podman run ... --mount type=tmpfs,tmpfs-size=512M,destination=/var/lib/pgsql/data ...'
 
 
 
